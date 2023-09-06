@@ -1,6 +1,7 @@
 package com.monir.orderService.service;
 
 import com.monir.orderService.entity.Order;
+import com.monir.orderService.external.client.ProductService;
 import com.monir.orderService.model.OrderRequest;
 import com.monir.orderService.model.OrderResponse;
 import com.monir.orderService.repository.OrderRepository;
@@ -19,6 +20,9 @@ public class OrderServiceImpl implements OrderService{
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private ProductService productService;
+
     @Override
     public long placeOrder(OrderRequest orderRequest) {
 
@@ -29,7 +33,7 @@ public class OrderServiceImpl implements OrderService{
 
         log.info("Placing Order Request: {}", orderRequest);
 
-//        productService.reduceQuantity(orderRequest.getProductId(), orderRequest.getQuantity());
+        productService.reduceQuantity(orderRequest.getProductId(), orderRequest.getQuantity());
 
         log.info("Creating Order with Status CREATED");
         Order order = Order.builder()
