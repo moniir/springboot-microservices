@@ -11,8 +11,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException exception){
-            return new ResponseEntity<>(new ErrorResponse().builder().errorCode(exception.getErrorCode())
-                    .errorMessage(exception.getMessage()).build(), HttpStatus.valueOf(exception.getStatus()));
+    public ResponseEntity<ErrorResponse> handleCustomException(CustomException exception) {
+        return new ResponseEntity<>(new ErrorResponse().builder()
+                .errorMessage(exception.getMessage())
+                .errorCode(exception.getErrorCode())
+                .build(),
+                HttpStatus.valueOf(exception.getStatus()));
     }
 }
