@@ -1,4 +1,4 @@
-package com.monir.orderService.request;
+package com.monir.orderService.external.request;
 
 import com.monir.orderService.model.PaymentMode;
 import lombok.AllArgsConstructor;

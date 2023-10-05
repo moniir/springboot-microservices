@@ -1,15 +1,14 @@
 package com.monir.orderService.service;
 
 import com.monir.orderService.entity.Order;
+import com.monir.orderService.external.client.PaymentService;
 import com.monir.orderService.external.client.ProductService;
+import com.monir.orderService.external.request.PaymentRequest;
 import com.monir.orderService.model.OrderRequest;
-import com.monir.orderService.model.OrderResponse;
 import com.monir.orderService.repository.OrderRepository;
-import com.monir.orderService.request.PaymentRequest;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 
@@ -17,11 +16,18 @@ import java.time.Instant;
 @Log4j2
 public class OrderServiceImpl implements OrderService{
 
-    @Autowired
-    private OrderRepository orderRepository;
+    private final OrderRepository orderRepository;
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
+
+    private final PaymentService paymentService;
+
+    public OrderServiceImpl(OrderRepository orderRepository, ProductService productService, PaymentService paymentService) {
+        this.orderRepository = orderRepository;
+        this.productService = productService;
+        this.paymentService = paymentService;
+    }
+
 
     @Override
     public long placeOrder(OrderRequest orderRequest) {
@@ -45,6 +51,29 @@ public class OrderServiceImpl implements OrderService{
                 .build();
 
         order = orderRepository.save(order);
+
+        log.info("Calling payment service to complete the payment");
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+                .orderId(order.getId())
+                .paymentMode(orderRequest.getPaymentMode())
+                .amount(order.getAmount())
+                .build();
+
+        String orderStatus = null;
+        try {
+            paymentService.doPayment(paymentRequest);
+            log.info("Payment done Successfully. Changing the Oder status to PLACED");
+            orderStatus = "PLACED";
+        } catch (Exception e) {
+            log.error("Error occurred in payment. Changing order status to PAYMENT_FAILED");
+            orderStatus = "PAYMENT_FAILED";
+        }
+
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
+
+        log.info("Order Places successfully with Order Id: {}", order.getId());
+
         return order.getId();
     }
 }
